@@ -1,0 +1,12 @@
+{
+  "outcome": "passed",
+  "origin": "http://localhost:3011",
+  "checks": [
+    "create and rename folder via real API",
+    "keyboard cancellation and confirmed delete",
+    "credentials stay in memory across client navigation",
+    "ordinary user denied administration",
+    "admin usage and durable reconciliation request",
+    "live OpenAPI route inventory"
+  ]
+}

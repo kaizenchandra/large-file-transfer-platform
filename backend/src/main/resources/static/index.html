@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width,initial-scale=1" name="viewport">
+    <meta content="light" name="color-scheme">
+    <title>Forma · Your drive</title>
+    <link href="/app.css" rel="stylesheet">
+    <script defer src="/app.js"></script>
+</head>
+<body><a class="skip" href="#main">Skip to files</a>
+<div class="shell">
+    <aside><a aria-label="Forma home" class="brand" href="/"><span class="logo">f.</span> forma<span
+            class="brand-dot">/</span></a>
+        <div class="workspace">PERSONAL WORKSPACE</div>
+        <button class="primary" id="upload">＋ Upload files</button>
+        <nav aria-label="Main">
+            <button class="nav active" id="home">▦ <span>My drive</span><span>↗</span></button>
+        </nav>
+        <div class="sidebar-note"><span class="spark">✧</span>
+            <h3>A little more organized.</h3>
+            <p>One home for your ideas,<br>projects, and everything else.</p></div>
+        <div class="storage">
+            <div class="storage-label"><span>Storage</span><span id="percent">—</span></div>
+            <progress aria-label="Storage used" id="quota" max="100" value="0"></progress>
+            <p id="storage-text">Sign in to view storage</p></div>
+        <button class="account" id="account"><span class="avatar">F</span><span
+                id="identity">Connect your drive</span><span>↪</span></button>
+    </aside>
+    <main id="main">
+        <header><span class="header-label">Your space, in order.</span>
+            <button class="quiet" id="refresh">↻ Refresh</button>
+        </header>
+        <section class="intro">
+            <div>
+                <div class="eyebrow">ROOM FOR EVERYTHING</div>
+                <h1>My drive<span>.</span></h1>
+                <p>Keep your work close. Find your next idea.</p></div>
+            <button class="secondary" id="folder">＋ New folder</button>
+        </section>
+        <section aria-label="File controls" class="toolbar">
+            <form id="search-form"><span aria-hidden="true">⌕</span><input aria-label="Search this drive" id="search"
+                                                                           placeholder="Search this drive"
+                                                                           type="search">
+                <button class="quiet" type="submit">Search</button>
+            </form>
+            <select aria-label="Filter file type" id="filter">
+                <option value="">All types</option>
+                <option value="FOLDER">Folders</option>
+                <option value="FILE">Files</option>
+            </select>
+            <div class="view-switch">
+                <button aria-label="List view" aria-pressed="true" id="list-view">☰</button>
+                <button aria-label="Grid view" aria-pressed="false" id="grid-view">▦</button>
+            </div>
+        </section>
+        <div class="section-heading">
+            <nav aria-label="Folder breadcrumb" id="breadcrumbs"></nav>
+            <span id="count"></span></div>
+        <div aria-live="polite" id="message" role="status"></div>
+        <section aria-label="Files" id="dropzone">
+            <div class="table-head"><span>Name</span><span>Last modified</span><span>Type</span><span>Actions</span>
+            </div>
+            <div id="files"></div>
+        </section>
+        <button class="secondary more" hidden id="more">Load more</button>
+        <footer><span>YOUR FILES. YOUR FLOW.</span><span>Forma Drive</span></footer>
+    </main>
+</div>
+<input hidden id="file-input" multiple type="file">
+<dialog id="dialog">
+    <div class="dialog-top"><h2 id="dialog-title"></h2>
+        <button aria-label="Close dialog" class="quiet" id="close-dialog">✕</button>
+    </div>
+    <div id="dialog-body"></div>
+</dialog>
+<div aria-live="polite" hidden id="transfer" role="status"></div>
+</body>
+</html>

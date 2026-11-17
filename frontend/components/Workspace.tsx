@@ -1,0 +1,8 @@
+'use client';
+import {createContext,useContext,useState,type ReactNode} from 'react';
+import Link from 'next/link';
+const Context=createContext<{authorization:string;setAuthorization:(value:string)=>void}>({authorization:'',setAuthorization:()=>{}});
+export function WorkspaceProvider({children}:{children:ReactNode}){const [authorization,setAuthorization]=useState('');return <Context.Provider value={{authorization,setAuthorization}}><nav aria-label="Primary navigation" className="flex flex-wrap gap-4 bg-white px-6 py-3 border-b border-slate-200">{[['/','Transfers'],['/dashboard','Dashboard'],['/files','Files'],['/uploads','Uploads'],['/downloads','Downloads'],['/processing','Processing'],['/sharing','Sharing'],['/admin','Administration']].map(([href,label])=><Link key={href} href={href}>{label}</Link>)}</nav>{children}</Context.Provider>}
+export const useWorkspace=()=>useContext(Context);
+export function Credentials(){const {authorization,setAuthorization}=useWorkspace();return <label>Authorization header <input aria-label="Authorization header" type="password" autoComplete="off" value={authorization} onChange={e=>setAuthorization(e.target.value)} placeholder="Bearer … or local Basic …"/></label>}
+export function useApi(){const {authorization}=useWorkspace();return async(path:string,method='GET',body?:unknown,headers:Record<string,string>={})=>{const response=await fetch('/api/v1'+path,{method,headers:{Authorization:authorization,'Content-Type':'application/json',...headers},...(body===undefined?{}:{body:JSON.stringify(body)})});if(!response.ok){const problem=await response.json().catch(()=>({}));throw Error(problem.detail||`HTTP ${response.status}`)}const text=await response.text();return text?JSON.parse(text):null}}

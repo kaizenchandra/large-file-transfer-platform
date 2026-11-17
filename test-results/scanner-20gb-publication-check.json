@@ -1,0 +1,15 @@
+{
+  "upload_status": 200,
+  "state": "QUARANTINED",
+  "scan_status": "REVIEW_REQUIRED",
+  "scan_evidence": [
+    {
+      "verdict": "REVIEW_REQUIRED",
+      "covered_bytes": 20000000000,
+      "segments": 598,
+      "scope": "segmented-signature-only",
+      "engine": "ClamAV segmented signatures; full-file format inspection unsupported"
+    }
+  ],
+  "normal_download_status": 404
+}

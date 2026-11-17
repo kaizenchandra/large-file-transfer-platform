@@ -1,0 +1,22 @@
+{
+  "bytes": 20000000000,
+  "api": "http://localhost:28081/api/v1",
+  "upload_concurrency": 3,
+  "scan_profile": "local DISABLED; not a security benchmark",
+  "fixture": "repeated seeded 1 MiB pseudorandom block; compressible repetition",
+  "started_utc": "2026-11-17T12:35:13Z",
+  "fixture_seconds": 11.380559917000937,
+  "source_sha256": "oca3kgCmD9udlVcnohSnG2PgVwaD8QOXNqZZOtEGJFY=",
+  "hash_seconds": 17.885785708000185,
+  "uploaded_bytes": 20000000000,
+  "parts": 2385,
+  "upload_elapsed_seconds": 139.42633433300216,
+  "parts_seconds": 139.42831579199992,
+  "part_retries": 0,
+  "completion_elapsed_seconds": 328.6296437079982,
+  "outcome": "failed",
+  "error_class": "ConnectionResetError",
+  "error": "[Errno 54] Connection reset by peer",
+  "total_seconds": 502.5196967919983,
+  "client_max_rss_bytes": 50085888
+}

@@ -1,0 +1,34 @@
+package com.example.drive;
+
+import java.util.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import static com.example.drive.Rules.require;
+
+@RestController
+@RequestMapping("/api/v1")
+public class ManagementApi {
+ final Drive d;ManagementApi(Drive d){this.d=d;}
+ String adminTenant(Authentication a){
+  boolean admin=a.getAuthorities().stream().anyMatch(role->role.getAuthority().equals("ROLE_ADMIN"));
+  if(a instanceof JwtAuthenticationToken jwt){var roles=jwt.getToken().getClaimAsStringList("roles");admin=roles!=null&&roles.contains("tenant_admin");}
+  require(admin,403,"Tenant administrator required");var actor=d.actor(a);require(actor.tenant()!=null,403,"Tenant required");return actor.tenant();
+ }
+ @GetMapping("/activity") Object activity(Authentication a){var actor=d.actor(a);var ns=d.home(actor);return Map.of("uploads",d.db.queryForList("SELECT id,node,name,size,state,scan_status,expires FROM upload_sessions WHERE ns=? AND actor=? ORDER BY expires DESC LIMIT 100",ns,actor.subject()),"jobs",d.db.queryForList("SELECT id,node,source,state,attempts,error,created FROM processing_jobs WHERE ns=? ORDER BY created DESC LIMIT 100",ns));}
+ @GetMapping("/files/{id}/share-links") Object links(Authentication a,@PathVariable UUID id){var actor=d.actor(a);var ns=d.home(actor);d.access(actor,ns,id,false,true);return d.db.queryForList("SELECT id,expires,revoked FROM share_links WHERE node=? ORDER BY expires DESC LIMIT 100",id);}
+ @DeleteMapping("/files/{id}/share-links/{link}") void revokeLink(Authentication a,@PathVariable UUID id,@PathVariable UUID link){var actor=d.actor(a);var ns=d.home(actor);d.revoke(actor,ns,id,link);}
+ @DeleteMapping("/shares/{share}") void revokeGrant(Authentication a,@PathVariable UUID share){var actor=d.actor(a);var ns=d.home(actor);var grant=d.one("SELECT p.node FROM sharing_permissions p JOIN file_nodes n ON n.id=p.node WHERE p.id=? AND n.ns=?",share,ns);d.revoke(actor,ns,(UUID)grant.get("node"),share);}
+ @DeleteMapping("/files/{id}") Object delete(Authentication a,@PathVariable UUID id,@RequestHeader("If-Match") long revision){var actor=d.actor(a);return d.mutate(actor,d.home(actor),id,revision,"delete",null,null);}
+ @PostMapping("/files/{id}/reprocess") Object reprocess(Authentication a,@PathVariable UUID id,@RequestHeader(value="Idempotency-Key",required=false) String key){var actor=d.actor(a);var ns=d.home(actor);return d.idempotent(actor,ns,key,java.util.List.of("reprocess",id),()->d.locked(actor,ns,()->{var node=d.read(actor,ns,id);d.access(actor,ns,id,true,true);d.authorizedVersion(actor,ns,id,null);var version=node.get("current_version");var found=d.db.queryForList("SELECT * FROM processing_jobs WHERE source=? FOR UPDATE",version);if(found.isEmpty()){var fresh=UUID.randomUUID();d.db.update("INSERT INTO processing_jobs(id,ns,node,source) VALUES(?,?,?,?)",fresh,ns,id,version);d.event(actor,ns,id,"REPROCESS");return Map.of("id",fresh,"source",version,"state","PENDING");}var job=found.getFirst();require(!Set.of("PENDING","RUNNING").contains(job.get("state")),409,"Job is already active");d.db.update("DELETE FROM processed_artifacts WHERE job=?",job.get("id"));d.db.update("UPDATE processing_jobs SET state='PENDING',attempts=0,fence=fence+1,available_at=now(),lease_until=NULL,error=NULL,report=NULL WHERE id=?",job.get("id"));d.event(actor,ns,id,"REPROCESS");return Map.of("id",job.get("id"),"source",version,"state","PENDING");}));}
+ @GetMapping("/admin/uploads") Object uploads(Authentication a){return d.db.queryForList("SELECT u.id,u.ns,u.name,u.size,u.state,u.scan_status,u.expires,u.completion_attempts FROM upload_sessions u JOIN namespaces n ON n.id=u.ns WHERE n.tenant=? ORDER BY u.expires DESC LIMIT 100",adminTenant(a));}
+ @GetMapping("/admin/jobs") Object jobs(Authentication a){return d.db.queryForList("SELECT j.id,j.ns,j.node,j.source,j.state,j.attempts,j.error,j.lease_until FROM processing_jobs j JOIN namespaces n ON n.id=j.ns WHERE n.tenant=? ORDER BY j.created DESC LIMIT 100",adminTenant(a));}
+ @GetMapping("/admin/quarantine") Object quarantine(Authentication a){return d.db.queryForList("SELECT u.id,u.ns,u.name,u.size,u.scan_status,u.completion_failure_status FROM upload_sessions u JOIN namespaces n ON n.id=u.ns WHERE n.tenant=? AND u.state='QUARANTINED' ORDER BY u.expires DESC LIMIT 100",adminTenant(a));}
+ @GetMapping("/admin/storage/usage") Object usage(Authentication a){return d.db.queryForList("SELECT id,subject,quota,used,reserved,quarantined,active FROM namespaces WHERE tenant=? ORDER BY id LIMIT 100",adminTenant(a));}
+ @GetMapping("/admin/audit") Object audit(Authentication a,@RequestParam(defaultValue="9223372036854775807") long before){return d.db.queryForList("SELECT a.id,a.ns,a.actor,a.action,a.entity,a.created FROM audit_records a JOIN namespaces n ON n.id=a.ns WHERE n.tenant=? AND a.id<? ORDER BY a.id DESC LIMIT 100",adminTenant(a),before);}
+ @PatchMapping("/admin/storage/{ns}/quota") Object quota(Authentication a,@PathVariable UUID ns,@RequestBody Quota body){String tenant=adminTenant(a);require(body.bytes>=0,400,"Invalid quota");return d.tx.execute(tx->{var n=d.one("SELECT * FROM namespaces WHERE id=? AND tenant=? FOR UPDATE",ns,tenant);require(d.num(n.get("quota"))==body.expected,412,"Quota changed");require(body.bytes>=d.num(n.get("used"))+d.num(n.get("reserved"))+d.num(n.get("quarantined")),409,"Quota below accounted bytes");d.db.update("UPDATE namespaces SET quota=? WHERE id=?",body.bytes,ns);d.db.update("INSERT INTO audit_records(ns,actor,action,entity) VALUES(?,?,'QUOTA_UPDATE',?)",ns,a.getName(),ns);return Map.of("id",ns,"quota",body.bytes);});}
+ @GetMapping("/admin/reconciliation") Object reconciliation(Authentication a){String tenant=adminTenant(a);return Map.of("sessions",d.db.queryForList("SELECT u.state,count(*) AS count FROM upload_sessions u JOIN namespaces n ON n.id=u.ns WHERE n.tenant=? GROUP BY u.state",tenant),"expiredLeases",d.db.queryForObject("SELECT count(*) FROM processing_jobs j JOIN namespaces n ON n.id=j.ns WHERE n.tenant=? AND j.state='RUNNING' AND j.lease_until<now()",Long.class,tenant));}
+ @PostMapping("/admin/reconciliation/run") Object runReconciliation(Authentication a){String tenant=adminTenant(a);var id=UUID.randomUUID();return org.springframework.http.ResponseEntity.accepted().body(d.one("INSERT INTO reconciliation_requests(id,tenant,actor) VALUES(?,?,?) ON CONFLICT(tenant) WHERE state IN ('PENDING','RUNNING') DO UPDATE SET tenant=excluded.tenant RETURNING id,state",id,tenant,a.getName()));}
+ @GetMapping("/admin/reconciliation/requests") Object requests(Authentication a){return d.db.queryForList("SELECT id,state,attempts,created FROM reconciliation_requests WHERE tenant=? ORDER BY created DESC LIMIT 100",adminTenant(a));}
+ record Quota(long bytes,long expected){}
+}

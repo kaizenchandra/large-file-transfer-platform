@@ -1,0 +1,49 @@
+spring:
+  application.name: drive
+  threads.virtual.enabled: true
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/drive}
+    username: ${DATABASE_USER:drive}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 16
+      connection-timeout: 3000
+      connection-init-sql: SET statement_timeout = '30s'
+  data.redis:
+    host: ${REDIS_HOST:localhost}
+    timeout: 500ms
+  lifecycle.timeout-per-shutdown-phase: 30s
+server:
+  shutdown: graceful
+  error.include-message: never
+management:
+  endpoints.web.exposure.include: health,prometheus
+  endpoint.health.probes.enabled: true
+  tracing.sampling.probability: 0.1
+  metrics.distribution.percentiles-histogram.http.server.requests: true
+  endpoint.health.group.readiness.include: readinessState,db
+  endpoint.health.group.scanning.include: contentScanner
+drive:
+  scan-mode: ${SCAN_MODE:AUTO}
+  scanner:
+    host: ${CLAMAV_HOST:localhost}
+    port: ${CLAMAV_PORT:3310}
+    timeout-ms: ${CLAMAV_TIMEOUT_MS:120000}
+    large-review-max-bytes: ${LARGE_SCAN_REVIEW_MAX_BYTES:0}
+    max-bytes: ${SCAN_MAX_BYTES:104857600}
+    policy: ${SCAN_POLICY:clamav-v1}
+  gc-enabled: ${OBJECT_GC_ENABLED:false}
+  gc-grace-seconds: ${OBJECT_GC_GRACE_SECONDS:86400}
+  sync-retention-days: ${SYNC_RETENTION_DAYS:0}
+  local: ${DRIVE_LOCAL:false}
+  local-password: ${LOCAL_PASSWORD:}
+  issuer: ${OIDC_ISSUER:}
+  audience: ${OIDC_AUDIENCE:drive}
+  s3:
+    endpoint: ${S3_ENDPOINT:http://localhost:9000}
+    public-endpoint: ${S3_PUBLIC_ENDPOINT:http://localhost:9000}
+    region: ${AWS_REGION:us-east-1}
+    bucket: ${S3_BUCKET:drive}
+logging.structured.format.console: logstash
+# Completion, reconciliation and supplemental processors must not block one shared scheduler thread.
+spring.task.scheduling.pool.size: 4

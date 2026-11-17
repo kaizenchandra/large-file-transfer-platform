@@ -1,0 +1,20 @@
+[
+  {
+    "kind": "pdf",
+    "file_id": "da457aa5-25ab-4fa1-8f51-9413c8869ee7",
+    "variant": "pdf-preview",
+    "preview_bytes": 12928,
+    "end_to_end_seconds": 5.695389749998867,
+    "scan_mode": "REQUIRED",
+    "outcome": "passed"
+  },
+  {
+    "kind": "mp4",
+    "file_id": "0a2dba74-461b-4326-a8f8-b7fab42782c1",
+    "variant": "video-preview",
+    "preview_bytes": 2146,
+    "end_to_end_seconds": 5.562946500001999,
+    "scan_mode": "REQUIRED",
+    "outcome": "passed"
+  }
+]

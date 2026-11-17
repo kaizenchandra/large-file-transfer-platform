@@ -1,0 +1,6 @@
+{
+  "engine_response": "ClamAV 1.5.4/28177/Sun Nov  8 06:23:52 2026",
+  "file_policy": "whole-file up to 100 MiB; 20 GB segmented signatures with mandatory review",
+  "window_bytes": 33554432,
+  "overlap_bytes": 65536
+}

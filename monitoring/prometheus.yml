@@ -1,0 +1,8 @@
+scrape_configs:
+  - job_name: drive
+    metrics_path: /actuator/prometheus
+    static_configs: [ { targets: [ 'app:8080' ] } ]
+    basic_auth:
+      username: alice
+      password_file: /run/secrets/drive_metrics_password
+rule_files: [ /etc/prometheus/alerts.yml ]

@@ -1,0 +1,34 @@
+{
+  "provider": "minio-scanner-enabled-review",
+  "bytes": 20000000000,
+  "api": "http://localhost:28083/api/v1",
+  "upload_concurrency": 3,
+  "scan_profile": "REQUIRED segmented signatures, mandatory review",
+  "fixture": "repeated seeded 1 MiB pseudorandom block; compressible repetition",
+  "started_utc": "2026-11-17T13:21:30Z",
+  "fixture_seconds": 2.333300290047191e-05,
+  "source_sha256": "oca3kgCmD9udlVcnohSnG2PgVwaD8QOXNqZZOtEGJFY=",
+  "hash_seconds": 10.47028649999993,
+  "resumed_from_state": "INITIATED",
+  "uploaded_bytes": 20000000000,
+  "parts": 2385,
+  "upload_elapsed_seconds": 102.28873499999827,
+  "parts_seconds": 102.28981683299935,
+  "part_retries": 0,
+  "completion_elapsed_seconds": 543.0419952090015,
+  "scan_status": "REVIEW_REQUIRED",
+  "scan_evidence": [
+    {
+      "verdict": "REVIEW_REQUIRED",
+      "covered_bytes": 20000000000,
+      "segments": 598,
+      "scope": "segmented-signature-only",
+      "engine": "ClamAV segmented signatures; full-file format inspection unsupported"
+    }
+  ],
+  "completion_seconds": 547.3680897920021,
+  "outcome": "review-required",
+  "published": false,
+  "total_seconds": 660.6595137079967,
+  "client_max_rss_bytes": 56016896
+}

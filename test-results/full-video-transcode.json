@@ -1,0 +1,20 @@
+{
+  "file_id": "6f5af1ca-67f1-4dd8-91f3-e92967dc33e6",
+  "duration_seconds": 5.914172166005301,
+  "artifacts": [
+    {
+      "variant": "video-preview",
+      "size": 2146,
+      "sha256": "vgifgJXfK61BpltNgdHWQeL/3/ZbIvmrNDyMwtcc5DE=",
+      "processor": "media-pipeline-v2"
+    },
+    {
+      "variant": "video-transcoded",
+      "size": 2313,
+      "sha256": "Vo06qVTEaKnb+4FtT1tCiJ0IjOog4JOGkM5hxdknlq0=",
+      "processor": "media-pipeline-v2"
+    }
+  ],
+  "scan_mode": "REQUIRED",
+  "outcome": "passed"
+}

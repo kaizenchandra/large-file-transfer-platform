@@ -1,0 +1,10 @@
+{
+  "fixture_bytes": 41943040,
+  "parts_before_restart": 2,
+  "upload_restart": "passed",
+  "file_id": "54155eee-d91d-45bb-96a8-f7a359fdf321",
+  "download_checkpoint_bytes": 25165824,
+  "download_restart": "passed",
+  "destination": "real Chromium OPFS handle persisted in IndexedDB",
+  "verified_sha256": "4d9ywoo4tH1hsvmBjGpahy+dhCbdxfNtRBu0nnqt2vY="
+}

@@ -1,0 +1,28 @@
+groups:
+  - name: drive
+    rules:
+      - alert: DriveApiErrors
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count[5m])), 1) > 0.01
+        for: 5m
+        labels: { severity: page }
+      - alert: DriveReconciliationFailure
+        expr: increase(drive_reconciliation_total{outcome="failure"}[10m]) > 0
+        for: 5m
+        labels: { severity: warning }
+      - alert: DrivePoolSaturated
+        expr: hikaricp_connections_pending > 0
+        for: 2m
+        labels: { severity: warning }
+      - alert: DriveSyncCompactionFailure
+        expr: increase(drive_sync_compaction_failures_total[10m]) > 0
+        for: 5m
+        labels: { severity: warning }
+
+      - alert: DriveObjectCollectionFailure
+        expr: increase(drive_gc_failures_total[10m]) > 0
+        for: 5m
+        labels: { severity: warning }
+      - alert: DriveScannerUnavailable
+        expr: increase(drive_scan_decisions_total{verdict="UNAVAILABLE"}[10m]) > 0
+        for: 2m
+        labels: { severity: warning }

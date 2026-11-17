@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: drive
+      POSTGRES_USER: drive
+      POSTGRES_PASSWORD: harbor-benchmark-database
+    ports: ['127.0.0.1:25432:5432']
+  storage:
+    image: localstack/localstack:4.10.0
+    environment:
+      SERVICES: s3
+    mem_limit: 4g
+    ports: ['127.0.0.1:29000:4566']
+    volumes:
+      - ./docker/init-storage.sh:/etc/localstack/init/ready.d/init-storage.sh:ro
+  clamav:
+    image: clamav/clamav@sha256:45fe5149fbee5a46509c9848ef20d0c354b7b2323c9369f285939a37cf33422a
+    platform: linux/amd64
+    entrypoint: ['clamd','-F','--config-file=/etc/clamav/clamd.conf']
+    mem_limit: 4g
+    ports: ['127.0.0.1:23310:3310']
+    volumes:
+      - ./docker/clamd.conf:/etc/clamav/clamd.conf:ro

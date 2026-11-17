@@ -1,0 +1,14 @@
+[
+  {
+    "id": "e989eda8-0f85-40c2-a302-caa81303781e",
+    "source": "21f83443-7b01-4d4c-bc05-a54655ff8b60",
+    "state": "SUCCEEDED",
+    "attempts": 1,
+    "report": {
+      "null": false,
+      "type": "jsonb",
+      "value": "{\"bytes\": 20000000000, \"sha256\": \"oca3kgCmD9udlVcnohSnG2PgVwaD8QOXNqZZOtEGJFY=\", \"processor\": \"stream-inspector-v1\", \"detectedType\": \"application/octet-stream\", \"sourceVersion\": \"21f83443-7b01-4d4c-bc05-a54655ff8b60\"}"
+    },
+    "error": null
+  }
+]

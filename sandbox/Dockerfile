@@ -1,0 +1,4 @@
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg poppler-utils && rm -rf /var/lib/apt/lists/*
+USER 65534:65534
+WORKDIR /tmp

@@ -1,0 +1,10 @@
+{
+  "provider": "localstack-4.10.0",
+  "object_expected_bytes": 20000000000,
+  "requested_range": "bytes=0-15",
+  "status": 206,
+  "content_range": "bytes 0-15/20000000000",
+  "content_length": "16",
+  "received_bytes": 0,
+  "elapsed_seconds": 0.06570899999860558
+}

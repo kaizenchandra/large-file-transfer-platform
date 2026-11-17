@@ -1,0 +1,20 @@
+{
+  "bytes": 20000000000,
+  "api": "http://localhost:28081/api/v1",
+  "upload_concurrency": 3,
+  "scan_profile": "local DISABLED; not a security benchmark",
+  "fixture": "repeated seeded 1 MiB pseudorandom block; compressible repetition",
+  "started_utc": "2026-11-17T12:45:17Z",
+  "fixture_seconds": 8.70830008352641e-05,
+  "source_sha256": "oca3kgCmD9udlVcnohSnG2PgVwaD8QOXNqZZOtEGJFY=",
+  "hash_seconds": 12.442626416999701,
+  "resumed_from_state": "COMPLETING",
+  "parts_seconds": 1.0840012691915035e-06,
+  "part_retries": 0,
+  "completion_elapsed_seconds": 240.19753370800026,
+  "outcome": "failed",
+  "error_class": "URLError",
+  "error": "<urlopen error [Errno 61] Connection refused>",
+  "total_seconds": 261.33073854100076,
+  "client_max_rss_bytes": 32440320
+}

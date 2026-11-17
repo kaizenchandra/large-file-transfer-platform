@@ -1,0 +1,12 @@
+{
+  "tests": 73,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "suites": 13,
+  "suite_seconds": 154.392,
+  "command": "JAVA_HOME=$(/usr/libexec/java_home -v 21) mvn -f backend/pom.xml -Pintegration test",
+  "recorded_at": "2026-11-17T14:51:56.471159+00:00",
+  "packaged_jar_sha256": "d9ccb73b607a7348a9dcb7a8758bfe33b7505e823d9ce997f602c1cbaeb4cd91",
+  "runtime_migrations_validated": 17
+}

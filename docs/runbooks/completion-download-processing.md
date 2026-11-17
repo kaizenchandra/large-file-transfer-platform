@@ -1,0 +1,25 @@
+# Completion, downloads and artifacts
+
+## Completion API contract
+
+`POST /api/v1/uploads/{id}/complete` returns 202 with a durable session. It performs authorization and transitions a live upload to COMPLETING in a short database transaction; it does not verify or publish content in the request. Repeated requests return the same session. Clients poll GET upload status. COMPLETED identifies a committed file/version; QUARANTINED is private and requires review or explicit abort. A scan rejection has scan_status BLOCKED; a workflow failure may instead retain PENDING and expose completion_failure_status (400/403/404/409/412/422, or 503 on exhausted infrastructure failures). These cases must not be described to users as proven malware.
+
+The completion worker has a 60-second lease, renews at 15 seconds and checks its monotonically increasing fence at promotion. External I/O never holds the namespace lock. A dead process loses its lease and another worker replays completion against the same immutable key. A successful object-storage operation followed by a lost response is recovered by object existence plus streamed integrity verification. Cancellation invalidates publication by changing durable state. Private objects may survive a cancelled transfer until garbage collection.
+
+Use separate API/worker capacity and tune scheduling/database/storage pools together before scaling. Current workers are co-located Spring scheduled tasks, with four scheduler threads. The completion worker selects one session per tick; reconciliation is a secondary path. Alert on oldest COMPLETING age, failures, retry_at delay, quarantine bytes and expired leases. Database reservations remain durable during retry; quarantine moves reservation into forensic accounting exactly once. Explicit abort releases that accounting. Do not delete rows to repair quota accounting.
+
+## Recover a download
+
+Supported Chromium browsers require a secure context, File System Access, IndexedDB and destination permission. Choose Download / resume for the same logical file. The checkpoint holds the original version, checksum, size, ETag, committed offset and filesystem handle; it never stores signed URLs or credentials. Each new range obtains fresh authorization for the pinned version. Permission revocation or file deletion stops the next authorized request; a previously issued URL remains usable until expiry.
+
+Pause aborts the current transfer. The last closed file write is checkpointed; an uncertain range repeats after resume. If the file was truncated, the source validator changes, or SHA-256 fails, select Restart download, then choose a clean destination. Restart clears metadata only; it does not delete a user's existing file. Browser storage eviction removes resume metadata. Native fallback downloads have browser-defined recovery and no application-managed checksum guarantee.
+
+Three requests fetch bounded 8 MiB intervals in parallel; each ordered batch contains at most 24 MiB of range payload buffers. Checkpointing uses createWritable/close for each ordered batch; browser implementations may copy existing data into temporary storage. Provision destination disk headroom. The dedicated OPFS worker uses synchronous writes and flushes instead; a real 20 GB OPFS recovery run is recorded in the measured-results report. Native external-destination copy costs remain unverified. Parallel range download is implemented with a fixed cap of three; adaptive download concurrency remains unimplemented.
+
+## Processor policy
+
+PNG thumbnails accept at most 32 MiB and 16 million source pixels. Dimensions are inspected before decode and large images use source subsampling. UTF-8 documents produce character/newline metadata; arbitrary binary formats are skipped. ZIP inventory accepts 1,000 entries and 64 MiB of total expanded content. No entry is extracted to a path and no embedded script or macro executes. PDF first-page and MP4 first-frame previews use the separate sandbox broker. Full MP4 transcode is supported through 64 MiB/120 seconds, with an 8 MiB output cap and duration/decode validation; see sandbox/README.md.
+
+Supplemental output never changes the source version. Each key includes job and fence identity; output is registered for cleanup before PUT and only an active job fence can register artifacts. Job success gates artifact download. Current-version authorization is rechecked when signing artifact links. File-version deletion cascades registry records; registered cleanup markers retain a path to delete physical outputs. GC is disabled by default; enable only after its grace-period and retention policies are reviewed. Versioned storage cleanup remains unsupported and fails closed.
+
+Processors run in the JVM under input/expansion budgets. This does not provide process-level CPU, memory or parser isolation. Deploy sandboxed workers with container resource limits, no network, non-root users and hard execution timeouts before accepting adversarial enterprise media. Production mandatory ClamAV scanning remains enabled and enforces its separate admission-size policy; local DISABLED mode is not a security guarantee.

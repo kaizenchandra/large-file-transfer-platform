@@ -1,0 +1,80 @@
+services:
+  frontend:
+    build: ./frontend
+    environment:
+      API_ORIGIN: http://app:8080
+    ports: [ "127.0.0.1:3011:3011" ]
+    depends_on: [ app ]
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: drive
+      POSTGRES_USER: drive
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD}
+    ports: [ "127.0.0.1:15432:5432" ]
+    volumes: [ "postgres:/var/lib/postgresql/data" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U drive" ]
+      interval: 3s
+      retries: 20
+  redis:
+    image: redis:7.4-alpine
+    ports: [ "127.0.0.1:16379:6379" ]
+  minio:
+    image: localstack/localstack:4.10.0
+    environment:
+      SERVICES: s3
+      PERSISTENCE: 1
+    ports: [ "127.0.0.1:19000:4566" ]
+    volumes:
+      - objects:/var/lib/localstack
+      - ./docker/init-storage.sh:/etc/localstack/init/ready.d/init-storage.sh:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "awslocal s3api head-bucket --bucket drive" ]
+      interval: 5s
+      retries: 30
+  app:
+    build: ./backend
+    environment:
+      DATABASE_URL: jdbc:postgresql://postgres:5432/drive
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      REDIS_HOST: redis
+      SCAN_MODE: ${SCAN_MODE:-AUTO}
+      CLAMAV_HOST: ${CLAMAV_HOST:-clamav}
+      CLAMAV_PORT: ${CLAMAV_PORT:-3310}
+      CLAMAV_TIMEOUT_MS: ${CLAMAV_TIMEOUT_MS:-120000}
+      SCAN_MAX_BYTES: ${SCAN_MAX_BYTES:-104857600}
+      SCAN_POLICY: ${SCAN_POLICY:-clamav-v1}
+      SYNC_RETENTION_DAYS: ${SYNC_RETENTION_DAYS:-0}
+      DRIVE_LOCAL: "true"
+      LOCAL_PASSWORD: ${LOCAL_PASSWORD:?Set LOCAL_PASSWORD}
+      OBJECT_GC_ENABLED: ${OBJECT_GC_ENABLED:-false}
+      OBJECT_GC_GRACE_SECONDS: ${OBJECT_GC_GRACE_SECONDS:-86400}
+      S3_ENDPOINT: http://minio:4566
+      S3_PUBLIC_ENDPOINT: http://localhost:19000
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    ports: [ "127.0.0.1:18080:8080" ]
+    depends_on:
+      postgres: { condition: service_healthy }
+      minio: { condition: service_healthy }
+  clamav:
+    profiles: [ antivirus ]
+    image: clamav/clamav@sha256:45fe5149fbee5a46509c9848ef20d0c354b7b2323c9369f285939a37cf33422a
+    platform: linux/amd64
+    mem_limit: 4g
+    environment:
+      FRESHCLAM_CHECKS: "4"
+    volumes:
+      - ./docker/clamd.conf:/etc/clamav/clamd.conf:ro
+      - scanner-db:/var/lib/clamav
+    healthcheck:
+      test: [ "CMD", "clamdscan", "--config-file=/etc/clamav/clamd.conf", "--ping=1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 120s
+volumes:
+  postgres:
+  objects:
+  scanner-db:
